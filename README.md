@@ -1,56 +1,63 @@
-# Welcome to your Expo app 👋
+# React Native E-Commerce App (My First Project)
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Hi! I am quite new to React Native. This is my very first project with it, I started from the official Expo template and built the store system on
+top of it piece by piece. I ran into a lot of problems, and I fixed them one by one.
 
-## Get started
+You will find my honest engineering reflection at the bottom of this file.
 
-1. Install dependencies
+## What I built
 
-   ```bash
-   npm install
-   ```
+A small e-commerce (shopping) app with:
 
-2. Start the app
+- Login / logout flow (splash screen -> login -> home -> logout back to splash)
+- Product catalog with images and prices
+- Search, category filter, and sort (newest / old / price)
+- Infinite scroll (loads 20 more products as you scroll)
+- Product detail page with quantity picker
+- Cart: add, remove, change quantity, see total price
+- Demo checkout -> order confirmation screen
+- Floating cart button on the home screen
 
-   ```bash
-   npx expo start
-   ```
+## Engineering reflection (challenges and solutions)
 
-In the output, you'll find options to open the app in a
+### Architectural challenges I faced
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+**1. Keeping the user logged in after the app is restarted.**
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+I needed the session to survive app restarts, but I also had to make sure an old
+or invalid token does not leave the app stuck on a half-broken logged-in state.
 
-## Get a fresh project
+**2. Cart state vs the server.**
 
-When you're ready, run:
+The cart lives in memory, but the mock server also stores a cart. Quantities should
+never go below 1 or above the product stock. Also, when a screen unmounts, an old
+async update must not call `setState` anymore (a common React error).
 
-```bash
-npm run reset-project
-```
+### How I solved them
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+**Solution 1 - Safe session storage (`src/lib/token-storage.ts`, `src/context/auth-context.tsx`)**
 
-### Other setup steps
+- Tokens are saved in `expo-secure-store`.
+- On app start, the context reads them, then calls the API's "current user" with
+  that token (`rehydrate`).
+- If the token is invalid (401), I delete it and mark the user logged out.
+- While state is still `loading`, I show a loading screen, so the user never sees
+  the wrong screen flash for a moment.
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+**Solution 2 - Cart sync without crashes (`src/context/cart-context.tsx`, `src/lib/cart.ts`)**
 
-## Learn more
+- The UI updates "optimistically" (fast), and the server sync runs in the
+  background. If the sync fails, the local cart stays because it is a mock server.
+- Quantity is clamped between 1 and the product stock.
+- Each fetch effect sets a `cancelled` flag and skips `setState` after unmount.
 
-To learn more about developing your project with Expo, look at the following resources:
+## Final note
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+I know I still have a lot to learn. With this project I tried to show that I can
+take a feature, break it into small parts, solve problems step by step, and finish
+the whole thing. I am comfortable learning new tools quickly, and I am excited to
+keep building with React Native.
 
-## Join the community
+---
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+_This README documents my own work on this project (my first React Native app)._
