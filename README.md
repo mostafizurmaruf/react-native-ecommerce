@@ -1,6 +1,6 @@
-# React Native E-Commerce App (My First Project)
+# React Native E-Commerce App
 
-Hi! I am quite new to React Native. This is my very first project with it, I started from the official Expo template and built the store system on
+Hi! I’m quite new to React Native, as I mentioned during the interview. I started from the official Expo template and built the store system on
 top of it piece by piece. I ran into a lot of problems, and I fixed them one by one.
 
 You will find my honest engineering reflection at the bottom of this file.
